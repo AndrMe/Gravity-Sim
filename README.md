@@ -1,2 +1,2 @@
 # Gravity-Sim
-A pygame project of gravity simulator
+Branch that is related to the complete _refactory_ needed for the code.
