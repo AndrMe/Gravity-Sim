@@ -1,2 +1,2 @@
 # Gravity-Sim
-A pygame project of gravity simulator
+A version that simulates **earth** and **moon** based on their approximate data.
