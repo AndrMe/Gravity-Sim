@@ -1,6 +1,5 @@
 import pygame
 import math
-
 WIDTH = 1200  # ширина игрового окна
 HEIGHT = 1000 # высота игрового окна
 FPS = 120 # частота кадров в секунду
@@ -11,17 +10,17 @@ BLUE=(120,219,226)
 GREY=(100,100,100)
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT),pygame.RESIZABLE)
-pygame.display.set_caption("Gravity Simulation")
+pygame.display.set_caption("Test")
 clock = pygame.time.Clock()
 d_click_cl=pygame.time.Clock()
 entr_cl=pygame.time.Clock()
 Running=True
-time=0.1
+time=800
 planets=[]
 map_l_click=False
 shift_x=0
 shift_y=0
-scale=1
+scale=0.00001
 stopped=True
 static_texts=[]
 bars=[]
@@ -32,7 +31,8 @@ add_list=[]
 add_list2=[]
 adding_planet=False
 keys=list(range(pygame.K_0,pygame.K_9))+list(range(pygame.K_a,pygame.K_z))+[pygame.K_COMMA,pygame.K_PERIOD]+[pygame.K_MINUS]
-g=22
+g=6.67430*10**(-11)
+
 v_dict={'time':time,'g':g,'scale':scale,
         'add_mass':0,'add_radius':0,'add_x':0,'add_y':0,
         'add_vel_x':0,'add_vel_y':0}
@@ -241,24 +241,21 @@ class Trace():
         move_y=y-self.last_cords[1]
         self.path+=math.sqrt(move_x**2+move_y**2)
         self.last_cords=(x,y)
-        if self.path>10:
+        if self.path>1500000:
             self.list.append((x,y))
             self.path=0
-        if len(self.list)>2000:
+        if len(self.list)>1000:
             self.list.pop(0)
     def draw(self):
         global shift_x,shift_y
-        step=math.ceil((1/(scale))**(2/3))
-        step=1
-        print(step)
-        for i in range(step,len(self.list),step):
-            screen_last=((self.list[i-step][0])*scale+shift_x,(self.list[i-step][1])*scale+shift_y)
+        for i in range(1,len(self.list)):
+            screen_last=((self.list[i-1][0])*scale+shift_x,(self.list[i-1][1])*scale+shift_y)
             scereen_new=((self.list[i][0])*scale+shift_x,(self.list[i][1])*scale+shift_y)
             if abs(screen_last[0]-WIDTH/2)<=WIDTH/2+5*scale and abs(screen_last[1]-HEIGHT/2)<=HEIGHT/2+5*scale:
                 pygame.draw.line(self.screen,BLUE,screen_last,scereen_new,3)
 class Planet():
     def __init__(self,mass,radius,x,y,vel_x,vel_y):
-        global planets
+        global screen,planets
         self.mass=mass
         self.x=x
         self.y=y
@@ -273,7 +270,6 @@ class Planet():
         self.trace=Trace(self.x,self.y,screen)
         self.screen_x=(x)*scale+shift_x
         self.screen_y=(y)*scale+shift_y
-        self.clicked=False
     def update(self,planets):
         global v_dict
         g=v_dict['g']
@@ -342,8 +338,6 @@ def handle_right_click(event):
         New_planet_button=Inworld_button(x,y,['New Planet'],method=button1)
         New_planet_button.x=New_planet_button.x-New_planet_button.length/2/scale
         New_planet_button.y=New_planet_button.y+New_planet_button.height/2/scale
-        # for planet in planets:
-        #     if 
 def do_events(events):
     global Running,map_l_click,shift_x,shift_y,move_last_cords,stopped,scale,static_texts,New_planet_button
     for event in events:
@@ -416,16 +410,17 @@ def init():
     # p3=planet(500,20,600,200,25,15,screen,planets)
 
 
-    sp=(-11*100-20)/1000
-    sun=Planet(1000,25,250,250,-sp,0)
-
-    p1=Planet(100,10,250,450,-10,0)
-    p2=Planet(10,4,250,465,-22,0)
-    p3=Planet(600,20,600,729,-6,-2)
+    # sp=(-11*100-20)/1000
+    # sun=Planet(1000,25,250,250,-sp,0)
+    # p1=Planet(100,10,250,450,-10,0)
+    # p2=Planet(10,4,250,465,-22,0)
+    # p3=Planet(600,20,600,729,-6,-2)
 
     # p4=Planet(1000,25,250,250,-8,0)
     # p5=Planet(500,15,250,350,16,0)
-
+    e_v=0
+    earth=Planet(5.9722*10**24,6371*1000,0,0,0+e_v,0)
+    moon=Planet(7.35*10**22,1737.1*1000,0,364600000,1080+e_v,0)
     t1=Static_text(350,60,['time is'])
     t2=Static_text(WIDTH/2-20,100,['PAUSED'])
     
@@ -553,7 +548,6 @@ def draw():
     pygame.display.update()
 init()
 while Running:
-
     events=pygame.event.get()
     do_events(events)
     update()
