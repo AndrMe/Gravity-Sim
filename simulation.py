@@ -11,6 +11,14 @@ class Planet():
         self.mass=mass
         self.force_x=0
         self.force_y=0
+    def move(self,delta_t):
+        ax=self.force_x/self.mass
+        ay=self.force_y/self.mass
+        self.x+=self.velocity_x*delta_t+ax*delta_t**2
+        self.y+=self.velocity_y*delta_t+ay*delta_t**2
+        self.force_x=0
+        self.force_y=0
+
 class Simulation():
     def __init__(self,planets=[],trace=None,g=1,delta_time=1):
         '''Get all necessary for sim data'''
@@ -18,12 +26,39 @@ class Simulation():
         self.trace=trace
         self.gravity=g
         self.delta_time=delta_time
+
     def update_forces(self):
         '''calculate forces'''
         for i in range(len(self.planets)):
-            for j in range(i,len(self.planets)):
+            for j in range(i+1,len(self.planets)):
                 self.calculate_forces(self.planets[i],self.planets[j])
+    
     def calculate_forces(self,p1:Planet,p2:Planet):
         '''calculates forces beetween two objects(Planets)'''
         r=distance(p1.x,p1.y,p2.x,p2.y)
         force=self.gravity*p1.mass*p2.mass/(r**2)
+        dx=p2.x-p1.x
+        dy=p2.y-p1.y
+        force_x=dx/r*force
+        force_y=dy/r*force
+        p1.force_x+=force_x
+        p2.force_x+=-force_x
+        p1.force_y+=force_y
+        p2.force_y+=-force_y
+    
+    def step(self,delta_t):
+        '''updates objects positions based on delta_time'''
+        for p1 in self.planets:
+            ax=p1.force_x/p1.mass
+            ay=p1.force_y/p1.mass
+            p1.x+=p1.velocity_x*delta_t+ax*delta_t**2
+            p1.y+=p1.velocity_y*delta_t+ay*delta_t**2
+            p1.force_x=0
+            p1.force_y=0
+    
+    def sim_cycle(self):
+        '''defines how force compution and steps will be combined'''
+        time_keys=[0.2,0.4,0.3,0.1] #sum=1.0
+        for time_key in time_keys:
+            self.update_forces()
+            self.step(self.delta_time*time_key)
