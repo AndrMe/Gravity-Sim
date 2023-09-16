@@ -9,25 +9,31 @@ def init():
     # StartPygame() like surface=pygame.surface.Surface((height,width))
     pygame.init()
     delta_time=1
-
     planets=[]
     trace=[]
     scale=1
     g=1
     scr_height=1000
     scr_width=1200
+    sim_core=simulation.Simulation(planets,trace,g,delta_time)
     surface=pygame.surface.Surface((scr_height,scr_width))
+    return surface,sim_core
 
-    return surface,delta_time,planets,trace,scale,g
-def run_program():
+def run_program(renderer,sim_core):
     '''Run the loop'''
-    pass
+    running=True
+    stopped=False
+    while running:
+        if not stopped:
+            sim_core.sim_cycle()
+        renderer.new_frame()
+        
 def end_program():
     '''all that should be done when shutting down the program'''
     pass
 
 if __name__=='__main__':
     '''All works from here'''
-    process_data=init()
-    run_program(process_data)
+    renderer,sim_core=init()
+    run_program(renderer,sim_core)
     end_program()
