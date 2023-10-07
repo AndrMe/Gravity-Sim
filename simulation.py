@@ -11,19 +11,30 @@ class Planet():
         self.mass=mass
         self.force_x=0
         self.force_y=0
+        self.trace=[[self.x,self.y]]
+        self.trace_appends=[[self.x,self.y]]
     def move(self,delta_t):
+        '''Move it based on time and self force'''
         ax=self.force_x/self.mass
         ay=self.force_y/self.mass
         self.x+=self.velocity_x*delta_t+ax*delta_t**2
         self.y+=self.velocity_y*delta_t+ay*delta_t**2
         self.force_x=0
         self.force_y=0
+    def update_trace(self):
+        '''How we update traces'''
+        self.trace.append([self.x,self.y])
+        self.trace_appends.append([self.x,self.y])
+    def get_traces(self):
+        '''Needed to get all appends from last call'''
+        s=self.trace_appends
+        self.trace_appends=[[self.x,self.y]]
+        return s
 
 class Simulation():
-    def __init__(self,planets=[],trace=None,g=1,delta_time=1):
+    def __init__(self,planets=[],g=1,delta_time=1):
         '''Get all necessary for sim data'''
         self.planets=planets
-        self.trace=trace
         self.gravity=g
         self.delta_time=delta_time
 
@@ -62,3 +73,10 @@ class Simulation():
         for time_key in time_keys:
             self.update_forces()
             self.step(self.delta_time*time_key)
+    def get_trace_updates(self):
+        '''returns apdates in traces happened from last request, list of lines(2cords)'''
+        new_lines=[]
+        for planet in self.planets:
+            new_lines.append(planet.get_traces())
+        return new_lines
+        
