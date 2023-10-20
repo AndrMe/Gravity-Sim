@@ -37,7 +37,11 @@ class Simulation():
         self.planets=planets
         self.gravity=g
         self.delta_time=delta_time
-
+    def update_state(self,configs):
+        '''Apply current configs'''
+        self.gravity=configs['g']
+        self.delta_time=configs['delta_time']
+        
     def update_forces(self):
         '''calculate forces'''
         for i in range(len(self.planets)):
