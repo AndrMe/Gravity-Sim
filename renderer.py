@@ -24,11 +24,15 @@ class Renderer():
         self.clock.tick(self.fps)
     
     def update_state(self,configs):
+        '''Apply current configs state'''
         x,y=self.screen_posdata[0]
         dx,dy=configs['mouse_move']
         self.screen_posdata=[[x-dx/self.scale,y-dy/self.scale],[configs['scr_width'],configs['scr_height']]]
+        self.scale_pow=configs['scale_power']
+        self.scale=1.1**self.scale_pow
 
     def pl_inscr(self,cords,rad):
+        '''Return true if planet with cords and adius is in screen'''
         if (cords[0]-rad)<=self.width and (cords[0]+rad)>=0 and (cords[1]-rad)<=self.height and (cords[1]+rad)>=0:
             return True
         return False
