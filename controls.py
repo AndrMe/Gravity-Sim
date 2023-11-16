@@ -1,52 +1,66 @@
 '''Handles events and control user inputs'''
 import pygame
-def update(events,sim,render,configs):
-    '''based on inputs controls settings,simulation,render'''
-    #configs are like {'stopped':True} {'dscale':0}
-    configs['scr_width'],configs['scr_height']=pygame.display.get_window_size()
-    configs['mouse_move']=(0,0)
-    for event in events: 
-        if event.type==pygame.QUIT:
-            configs['running']=False
-        if event.type==pygame.MOUSEBUTTONDOWN:
-            mouse_down(event,configs)
-        if event.type==pygame.MOUSEBUTTONUP:
-            mouse_up(event,configs)
-        if event.type==pygame.MOUSEMOTION:
-            move_mouse(event,configs)
-    return configs
+class Controler():
+    def __init__(self,sim,render,configs):
+        self.sim=sim
+        self.render=render
+        self.configs=configs
+        self.events=[]
+        self.event=None
 
-def mouse_down(event:pygame.event.Event,configs):
-    if event.button==pygame.BUTTON_LEFT:
-        l_click(event,configs)
-    elif event.button==pygame.BUTTON_RIGHT:
-        r_click(event,configs)
-    
-def l_click(event,configs):
-    x,y=event.pos
-    pointing_map=True
-    if pointing_map:
-        configs['map_l_click']=True
-        configs['last_cords']=(x,y)
+    def update(self):
+        '''based on inputs controls settings,simulation,render'''
+        #configs are like {'stopped':True} {'dscale':0}
+        self.events=pygame.event.get()
+        self.configs['scr_width'],self.configs['scr_height']=pygame.display.get_window_size()
+        self.configs['mouse_move']=(0,0)
+        for self.event in self.events: 
+            if self.event.type==pygame.QUIT:
+                self.configs['running']=False
+            if self.event.type==pygame.MOUSEBUTTONDOWN:
+                self.mouse_down()
+            if self.event.type==pygame.MOUSEBUTTONUP:
+                self.mouse_up()
+            if self.event.type==pygame.MOUSEMOTION:
+                self.move_mouse()
+            if self.event.type==pygame.MOUSEWHEEL:
+                self.wheel_move()
 
-def r_click(event,configs):
-    pass
+    def mouse_down(self):
+        if self.event.button==pygame.BUTTON_LEFT:
+            self.l_click()
+        elif self.event.button==pygame.BUTTON_RIGHT:
+            self.r_click()
+        
+    def l_click(self):
+        x,y=self.event.pos
+        pointing_map=True
+        if pointing_map:
+            self.configs['map_l_click']=True
+            self.configs['last_cords']=(x,y)
 
-def mouse_up(event,configs):
-    if event.button==pygame.BUTTON_LEFT:
-        l_up(event,configs)
-    elif event.button==pygame.BUTTON_RIGHT:
-        r_up(event,configs)
+    def r_click(self):
+        pass
 
-def l_up(event,configs):
-    configs['map_l_click']=False
+    def mouse_up(self):
+        if self.event.button==pygame.BUTTON_LEFT:
+            self.l_up()
+        elif self.event.button==pygame.BUTTON_RIGHT:
+            self.r_up()
 
-def r_up(event,configs):
-    pass
-def move_mouse(event,configs):
-    if configs['map_l_click']:
-        new_x,new_y=event.pos
-        dx=new_x-configs['last_cords'][0]
-        dy=new_y-configs['last_cords'][1]
-        configs['mouse_move']=(dx,dy)
-        configs['last_cords']=(new_x,new_y)
+    def l_up(self):
+        self.configs['map_l_click']=False
+
+    def r_up(self):
+        pass
+
+    def move_mouse(self):
+        if self.configs['map_l_click']:
+            new_x,new_y=self.event.pos
+            dx=new_x-self.configs['last_cords'][0]
+            dy=new_y-self.configs['last_cords'][1]
+            self.configs['mouse_move']=(dx,dy)
+            self.configs['last_cords']=(new_x,new_y)
+        
+    def wheel_move(self):
+        self.configs['scale_power']+=self.event.y
