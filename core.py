@@ -30,29 +30,31 @@ def init():
     scr_width=configs['scr_width']
     scr_height=configs['scr_height']
     planets=dict_to_pl(planets)
-    #planets.append(simulation.Planet(100,100,2,5,3,1))   #Test
+    #planets.append(simulation.Planet(500,400,1,1,20,3))   #Test
     sim_core=simulation.Simulation(planets,configs['g'],configs['delta_time'])
     screen = pygame.display.set_mode((scr_width,scr_height),pygame.RESIZABLE )
     render=renderer.Renderer(screen,scr_height,scr_width,configs['scale_power'],trace,rend_clock,configs['fps']) #trace is renderer's
+    controler=controls.Controler(sim_core,render,configs)
     # interf=interface.Interface() -> renderer
-    return render,sim_core,configs
+    return render,sim_core,controler,configs
 
 def update_state(sim_core:simulation.Simulation,render:renderer.Renderer,configs:set()):
     sim_core.update_state(configs)
     render.update_state(configs)
 
-def run_program(render:renderer.Renderer,sim_core:simulation.Simulation,configs:set()):
+def run_program(render:renderer.Renderer,sim_core:simulation.Simulation,controler:controls.Controler,configs:set()):
     '''Run the loop'''
     configs['running']=True
     configs['stopped']=False
     while configs['running']:
         t1=time.time()
-        configs=controls.update(pygame.event.get(),sim_core,render,configs)
+        controler.update()
         update_state(sim_core,render,configs)
         if not configs['stopped']: 
             sim_core.sim_cycle()
             t2=time.time()
             used_time=(t2-t1)*1000
+            print(used_time) #test
             render.transit_trace(sim_core.get_trace_updates())
         est_rend_time=1/configs['fps']*1000-used_time
         render.new_frame(sim_core.planets,est_rend_time)    
@@ -76,10 +78,10 @@ def end_program(configs,planets,trace):
     '''all that should be done when shutting down the program'''
     planets=pl_to_dicts(planets)
     save_data={'configs':configs,'planets':planets,'trace':trace}
-    update_data_in_file(save_data,'gravity_save.json')
+    #update_data_in_file(save_data,'gravity_save.json')
     print('ending')
 
 if __name__=='__main__':
     '''All works from here'''
-    render,sim_core,configs=init()
-    run_program(render,sim_core,configs)
+    render,sim_core,controler,configs=init()
+    run_program(render,sim_core,controler,configs)
