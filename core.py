@@ -6,61 +6,68 @@ import controls
 import time
 from loader import*
 
-def fist_start_confs():
-    delta_time=1
-    scale_power=1
-    g=1
-    scr_height=1000
-    scr_width=1200
-    configs={
-        'running':True,'stopped':True,'scale_power':scale_power,'scr_height':scr_height,'scr_width':scr_width,
-        'g':g,'delta_time':delta_time,'fps':60,'map_l_click':False,'last_cords':(0,0),'mouse_move':(0,0)
-        }
-    return configs
+class App():   
+    def __init__(self):
+        ''' load all the configs,init all the objects'''
+        pygame.init()
+        configs,planets,trace=load_init_data('gravity_save.json')
+        if configs==None:
+            configs=self.get_default_confs()
+        self.configs=configs
+        planets=dict_to_pl(planets)
+        #planets.append(simulation.Planet(500,400,1,1,20,3))   #Test
+        self.sim_core=simulation.Simulation(planets,self.configs['g'],self.configs['delta_time'])
+        screen = pygame.display.set_mode((self.configs['scr_width'],self.configs['scr_height']),pygame.RESIZABLE )
+        rend_clock=pygame.time.Clock()
+        self.render=renderer.Renderer(
+            screen,self.configs['scr_height'],self.configs['scr_width'],
+            self.configs['scale_power'],trace,rend_clock,self.configs['fps']
+            ) #trace is renderer's
+        self.controler=controls.Controler(self.sim_core,self.render,self.configs)
+        # interf=interface.Interface() -> renderer
+        
+    def get_default_confs(self):
+        delta_time=1
+        scale_power=1
+        g=1
+        scr_height=1000
+        scr_width=1200
+        configs={
+            'running':True,'stopped':True,'scale_power':scale_power,'scr_height':scr_height,'scr_width':scr_width,
+            'g':g,'delta_time':delta_time,'fps':60,'map_l_click':False,'last_cords':(0,0),'mouse_move':(0,0)
+            }
+        return configs
     
-def init():
-    ''' load all the configs,init all the objects'''
-    #load_data() -> planets, delta_time, trace,v_dict, (configs)
-    # StartPygame() like surface=pygame.surface.Surface((height,width))
-    pygame.init()
-    rend_clock=pygame.time.Clock()
-    configs,planets,trace=load_init_data('gravity_save.json')
-    if configs==None:
-        configs=fist_start_confs()
-    scr_width=configs['scr_width']
-    scr_height=configs['scr_height']
-    planets=dict_to_pl(planets)
-    #planets.append(simulation.Planet(500,400,1,1,20,3))   #Test
-    sim_core=simulation.Simulation(planets,configs['g'],configs['delta_time'])
-    screen = pygame.display.set_mode((scr_width,scr_height),pygame.RESIZABLE )
-    render=renderer.Renderer(screen,scr_height,scr_width,configs['scale_power'],trace,rend_clock,configs['fps']) #trace is renderer's
-    controler=controls.Controler(sim_core,render,configs)
-    # interf=interface.Interface() -> renderer
-    return render,sim_core,controler,configs
+    def run_program(self):
+        '''Run the loop'''
+        self.configs['running']=True
+        self.configs['stopped']=False
+        while self.configs['running']:
+            t1=time.time()
+            self.controler.update()
+            self.update_state()
+            if not self.configs['stopped']: 
+                self.sim_core.sim_cycle()
+                t2=time.time()
+                used_time=(t2-t1)*1000
+                print(used_time) #test
+                self.render.transit_trace(self.sim_core.get_trace_updates())
+            est_rend_time=1/self.configs['fps']*1000-used_time
+            self.render.new_frame(self.sim_core.planets,est_rend_time)    
+            #configs['running']=False #debug
+        self.end_program() 
 
-def update_state(sim_core:simulation.Simulation,render:renderer.Renderer,configs:set()):
-    sim_core.update_state(configs)
-    render.update_state(configs)
+    def update_state(self):
+        self.sim_core.update_state(self.configs)
+        self.render.update_state(self.configs)
 
-def run_program(render:renderer.Renderer,sim_core:simulation.Simulation,controler:controls.Controler,configs:set()):
-    '''Run the loop'''
-    configs['running']=True
-    configs['stopped']=False
-    while configs['running']:
-        t1=time.time()
-        controler.update()
-        update_state(sim_core,render,configs)
-        if not configs['stopped']: 
-            sim_core.sim_cycle()
-            t2=time.time()
-            used_time=(t2-t1)*1000
-            print(used_time) #test
-            render.transit_trace(sim_core.get_trace_updates())
-        est_rend_time=1/configs['fps']*1000-used_time
-        render.new_frame(sim_core.planets,est_rend_time)    
-        #configs['running']=False #debug
-    end_program(configs,sim_core.planets,render.trace) 
-
+    def end_program(self):
+        '''all that should be done when shutting down the program'''
+        planets=pl_to_dicts(self.sim_core.planets)
+        save_data={'configs':self.configs,'planets':planets,'trace':self.render.trace}
+        #update_data_in_file(save_data,'gravity_save.json')
+        print('ending')
+        
 def pl_to_dicts(planets):
     '''Transits list of planets to list of dicts'''
     pl_dicts=[]
@@ -74,14 +81,7 @@ def dict_to_pl(planets):
         pl_list.append(simulation.Planet(planet['x'],planet['y'],planet['velocity_x'],planet['velocity_y'],planet['radius'],planet['mass']))
     return pl_list
 
-def end_program(configs,planets,trace):
-    '''all that should be done when shutting down the program'''
-    planets=pl_to_dicts(planets)
-    save_data={'configs':configs,'planets':planets,'trace':trace}
-    #update_data_in_file(save_data,'gravity_save.json')
-    print('ending')
-
 if __name__=='__main__':
     '''All works from here'''
-    render,sim_core,controler,configs=init()
-    run_program(render,sim_core,controler,configs)
+    sim_app=App()
+    sim_app.run_program()
